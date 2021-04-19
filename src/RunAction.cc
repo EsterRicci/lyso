@@ -52,6 +52,22 @@ RunAction::RunAction(DetectorConstruction* det, PrimaryGeneratorAction* prim)
 {
  // Book predefined histograms
  fHistoManager = new HistoManager(); 
+
+ //define ntuple
+ G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
+
+ analysisManager->SetVerboseLevel(1);
+ analysisManager->SetFileName("test");
+ analysisManager->SetFirstNtupleId(1);
+ analysisManager->SetFirstHistoId(1);
+
+ analysisManager->CreateNtuple("T","T");
+
+ analysisManager->CreateNtupleDColumn("Edep_LYSO");
+  analysisManager->CreateNtupleDColumn("Edep_NaI1");
+  //analysisManager->CreateNtupleDColumn("Edep_NaI2");
+
+  analysisManager->FinishNtuple();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -88,9 +104,9 @@ void RunAction::BeginOfRunAction(const G4Run*)
   //histograms
   //
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
-  if ( analysisManager->IsActive() ) {
+  //if ( analysisManager->IsActive() ) {
     analysisManager->OpenFile();
-  }  
+  //}  
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -101,10 +117,10 @@ void RunAction::EndOfRunAction(const G4Run*)
   
   //save histograms      
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
-  if ( analysisManager->IsActive() ) {
+  //if ( analysisManager->IsActive() ) {
     analysisManager->Write();
     analysisManager->CloseFile();
-  }
+  //}
       
   // show Rndm status
   if (isMaster) G4Random::showEngineStatus();
