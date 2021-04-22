@@ -36,6 +36,7 @@
 
 #include "G4Material.hh"
 #include "G4NistManager.hh"
+#include "G4SDManager.hh"
 
 #include "G4Tubs.hh"
 #include "G4Box.hh"
@@ -54,6 +55,8 @@
 
 #include "G4UnionSolid.hh"
 #include "G4VisAttributes.hh"
+
+#include "SensitiveDetector.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -278,6 +281,39 @@ G4VisAttributes* visAuxiliaryCover = new G4VisAttributes();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+
+void DetectorConstruction::ConstructSDandField()
+{
+  // Sensitive detectors
+
+  G4String LYSOSDname = "LYSOSD";
+  SensitiveDetector* aLYSOSD = new SensitiveDetector(LYSOSDname,
+                                            "LYSO");
+  G4SDManager::GetSDMpointer()->AddNewDetector(aLYSOSD);
+  SetSensitiveDetector( fLogicDetector,  aLYSOSD );
+
+  G4String NaISDname = "NaISD";
+  SensitiveDetector* aNaISD = new SensitiveDetector(NaISDname,"NaI");
+  G4SDManager::GetSDMpointer()->AddNewDetector(aNaISD);
+  SetSensitiveDetector(fLogicAuxiliaryDetector,aNaISD);
+
+  // Create global magnetic field messenger.
+  // Uniform magnetic field is then created automatically if
+  // the field value is not zero.
+  /*
+  G4ThreeVector fieldValue = G4ThreeVector();
+  fMagFieldMessenger = new G4GlobalMagFieldMessenger(fieldValue);
+  fMagFieldMessenger->SetVerboseLevel(1);
+  
+  // Register the field messenger for deleting
+  G4AutoDelete::Register(fMagFieldMessenger);
+  */
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+
 
 void DetectorConstruction::PrintParameters()
 {

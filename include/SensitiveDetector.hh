@@ -23,69 +23,46 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-/// \file Run.hh
-/// \brief Definition of the Run class
 //
-//
+/// \file B2TrackerSD.hh
+/// \brief Definition of the B2TrackerSD class
+
+#ifndef SensDet_h
+#define SensDet_h 1
+
+#include "G4VSensitiveDetector.hh"
+
+#include "Hit.hh"
+
+#include <vector>
+
+class G4Step;
+class G4HCofThisEvent;
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#ifndef Run_h
-#define Run_h 1
+/// B2Tracker sensitive detector class
+///
+/// The hits are accounted in hits in ProcessHits() function which is called
+/// by Geant4 kernel at each step. A hit is created with each step with non zero
+/// energy deposit.
 
-#include "G4Run.hh"
-#include "G4VProcess.hh"
-#include "globals.hh"
-#include <map>
-
-class DetectorConstruction;
-class G4ParticleDefinition;
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-class Run : public G4Run
+class SensitiveDetector : public G4VSensitiveDetector
 {
   public:
-    Run(DetectorConstruction*);
-   ~Run();
+    SensitiveDetector(const G4String& name, 
+                const G4String& hitsCollectionName);
+    virtual ~SensitiveDetector();
+  
+    // methods from base class
+    virtual void   Initialize(G4HCofThisEvent* hitCollection);
+    virtual G4bool ProcessHits(G4Step* step, G4TouchableHistory* history);
+    virtual void   EndOfEvent(G4HCofThisEvent* hitCollection);
 
-  public:
-    void SetPrimary(G4ParticleDefinition* particle, G4double energy);         
-    void CountProcesses(const G4VProcess* process, G4int iVol);
-    void ParticleCount(G4String, G4double, G4int); 
-    void AddEdep (G4double edep1, G4double edep2);
-                          
-    virtual void Merge(const G4Run*);
-    void EndOfRun();
-    void WriteActivity(G4int);     
-   
   private:
-    struct ParticleData {
-     ParticleData()
-       : fCount(0), fEmean(0.), fEmin(0.), fEmax(0.) {}
-     ParticleData(G4int count, G4double ekin, G4double emin, G4double emax)
-       : fCount(count), fEmean(ekin), fEmin(emin), fEmax(emax) {}
-     G4int     fCount;
-     G4double  fEmean;
-     G4double  fEmin;
-     G4double  fEmax;
-    };
-     
-  private:
-    DetectorConstruction* fDetector;
-    G4ParticleDefinition* fParticle;
-    G4double              fEkin;
-    
-    G4double fEdepTarget, fEdepTarget2;
-    G4double fEdepDetect, fEdepDetect2;    
-     
-    std::map<G4String,G4int>        fProcCounter1;
-    std::map<G4String,G4int>        fProcCounter2;    
-    std::map<G4String,ParticleData> fParticleDataMap1;                    
-    std::map<G4String,ParticleData> fParticleDataMap2;
+    HitsCollection* fHitsCollection;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif
-

@@ -23,40 +23,88 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-/// \file SteppingAction.cc
-/// \brief Implementation of the SteppingAction class
 //
-// 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+/// \file B2TrackerHit.hh
+/// \brief Definition of the B2TrackerHit class
 
-#include "SteppingAction.hh"
+#ifndef HitClass_h
+#define HitClass_h 1
 
-#include "DetectorConstruction.hh"
-//#include "Run.hh"
-#include "EventAction.hh"
-#include "HistoManager.hh"
+#include "G4VHit.hh"
+#include "G4THitsCollection.hh"
+#include "G4Allocator.hh"
+#include "G4ThreeVector.hh"
+#include "tls.hh"
 
-#include "G4RunManager.hh"
-#include "G4SystemOfUnits.hh"
-#include "G4UnitsTable.hh"
-                           
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+/// Tracker hit class
+///
+/// It defines data members to store the trackID, chamberNb, energy deposit,
+/// and position of charged particles in a selected volume:
+/// - fTrackID, fChamberNB, fEdep, fPos
 
-SteppingAction::SteppingAction(DetectorConstruction* det, EventAction* event)
-: G4UserSteppingAction(), fDetector(det), fEventAction(event)
-{ }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-SteppingAction::~SteppingAction()
-{ }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void SteppingAction::UserSteppingAction(const G4Step* aStep)
+class HitClass : public G4VHit
 {
-      
+  public:
+    HitClass();
+    HitClass(const HitClass&);
+    virtual ~HitClass();
+
+    // operators
+    const HitClass& operator=(const HitClass&);
+    G4bool operator==(const HitClass&) const;
+
+    inline void* operator new(size_t);
+    inline void  operator delete(void*);
+
+    // methods from base class
+    virtual void Draw();
+    virtual void Print();
+
+    // Set methods
+    void SetTrackID  (G4int track)      { fTrackID = track; };
+    void SetChamberNb(G4int replica)      { fReplicaNb = replica; };
+    void SetEdep     (G4double de)      { fEdep = de; };
+    void SetTime     (G4double time)    { fTime = time; };
+    void SetPos      (G4ThreeVector xyz){ fPos = xyz; };
+
+    // Get methods
+    G4int GetTrackID() const     { return fTrackID; };
+    G4int GetReplicaNb() const   { return fReplicaNb; };
+    G4double GetEdep() const     { return fEdep; };
+    G4double GetTime() const     { return fTime; };
+    G4ThreeVector GetPos() const { return fPos; };
+
+  private:
+
+      G4int         fTrackID;
+      G4int         fReplicaNb;
+      G4double      fEdep;
+      G4double      fTime;
+      G4ThreeVector fPos;
+};
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+typedef G4THitsCollection<HitClass> HitsCollection;
+
+extern G4ThreadLocal G4Allocator<HitClass>* HitAllocator;
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+inline void* HitClass::operator new(size_t)
+{
+  if(!HitAllocator)
+      HitAllocator = new G4Allocator<HitClass>;
+  return (void *) HitAllocator->MallocSingle();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+inline void HitClass::operator delete(void *hit)
+{
+  HitAllocator->FreeSingle((HitClass*) hit);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+#endif

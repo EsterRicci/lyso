@@ -23,82 +23,87 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-/// \file EventAction.cc
-/// \brief Implementation of the EventAction class
 //
-//
+/// \file B2TrackerSD.cc
+/// \brief Implementation of the B2TrackerSD class
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-#include "EventAction.hh"
-
-//#include "Run.hh"
-#include "HistoManager.hh"
-
-#include "G4Event.hh"
-#include "G4RunManager.hh"
-#include "G4SystemOfUnits.hh"
-#include "G4UnitsTable.hh"
+#include "SensitiveDetector.hh"
+#include "G4HCofThisEvent.hh"
+#include "G4Step.hh"
+#include "G4ThreeVector.hh"
+#include "G4SDManager.hh"
+#include "G4ios.hh"
 #include "Hit.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-EventAction::EventAction()
-:G4UserEventAction()
-{ } 
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-EventAction::~EventAction()
-{ }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void EventAction::BeginOfEventAction(const G4Event*)
+SensitiveDetector::SensitiveDetector(const G4String& name,
+                         const G4String& hitsCollectionName) 
+ : G4VSensitiveDetector(name),
+   fHitsCollection(NULL)
 {
-  //fEdep1 = fEdep2 = fWeight1 = fWeight2 = 0.;
-  //fTime0 = -1*s;
+  collectionName.insert(hitsCollectionName);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+SensitiveDetector::~SensitiveDetector() 
+{}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void EventAction::EndOfEventAction(const G4Event* event)
+void SensitiveDetector::Initialize(G4HCofThisEvent* hce)
 {
- G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
- 
- G4VHitsCollection* hc_LYSO = event->GetHCofThisEvent()->GetHC(0);
-G4VHitsCollection* hc_NaI = event->GetHCofThisEvent()->GetHC(1);
+  // Create hits collection
 
-G4double Edep_LYSO=0;
-G4double Edep_NaI[2];
+  fHitsCollection 
+    = new HitsCollection(SensitiveDetectorName, collectionName[0]); 
 
-for(int iDet=0;iDet<2;++iDet)
-  Edep_NaI[iDet]=0;
+  // Add this collection in hce
 
-for(int iH=0;iH<hc_LYSO->GetSize();++iH){
-    HitClass* hit=static_cast<HitClass*>(hc_LYSO->GetHit(iH));
-    Edep_LYSO+=hit->GetEdep(); //adding the energies of the steps inside each detector, identified with chamber number
+  G4int hcID 
+    = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
+  hce->AddHitsCollection( hcID, fHitsCollection ); 
 }
 
-for(int iH=0;iH<hc_NaI->GetSize();++iH){
-    HitClass* hit=static_cast<HitClass*>(hc_NaI->GetHit(iH));
-    Edep_NaI[hit->GetReplicaNb()]+=hit->GetEdep(); //adding the energies of the steps inside each detector, identified with chamber number
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+G4bool SensitiveDetector::ProcessHits(G4Step* aStep, 
+                                     G4TouchableHistory*)
+{  
+  // energy deposit
+  G4double edep = aStep->GetTotalEnergyDeposit();
+
+  if (edep==0.) return false;
+
+  HitClass* newHit = new HitClass();
+
+  newHit->SetTrackID  (aStep->GetTrack()->GetTrackID());
+  newHit->SetChamberNb(aStep->GetPreStepPoint()->GetTouchableHandle()
+                                               ->GetCopyNumber());
+  newHit->SetEdep(edep);
+  newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
+  newHit->SetPos (aStep->GetPostStepPoint()->GetPosition());
+
+  fHitsCollection->insert( newHit );
+
+  //newHit->Print();
+
+  return true;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void SensitiveDetector::EndOfEvent(G4HCofThisEvent*)
+{
+  if ( verboseLevel>1 ) { 
+     G4int nofHits = fHitsCollection->entries();
+     G4cout
+       << G4endl 
+       << "-------->Hits Collection: in this event they are " << nofHits 
+       << " hits in the tracker chambers: " << G4endl;
+     for ( G4int i=0; i<nofHits; i++ ) (*fHitsCollection)[i]->Print();
   }
-
-  analysisManager->FillNtupleDColumn(0,Edep_LYSO);
-  analysisManager->FillNtupleDColumn(1,Edep_NaI[0]);
-  //analysisManager->FillNtupleDColumn(2,Edep_NaI[1]);
-
-  analysisManager->AddNtupleRow(); 
-
-  //G4cout<<"Edep LYSO "<<Edep_LYSO<<" Edep NaI 1 "<<Edep_NaI[0]<<" Edep NaI 2 "<<Edep_NaI[1]<<G4endl;
-      
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-
