@@ -58,6 +58,7 @@ RunAction::RunAction(DetectorConstruction* det, PrimaryGeneratorAction* prim)
  G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
 
  analysisManager->SetVerboseLevel(1);
+ analysisManager->SetDefaultFileType("root");
  analysisManager->SetFileName("test");
  analysisManager->SetFirstNtupleId(1);
  analysisManager->SetFirstHistoId(1);
