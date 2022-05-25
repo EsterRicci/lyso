@@ -83,6 +83,32 @@ int main(int argc,char** argv) {
   runManager->SetUserInitialization(new ActionInitialization(det));
 
   //initialize visualization
+  G4VisManager* visManager = new G4VisExecutive;
+  // G4VisExecutive can take a verbosity argument - see /vis/verbose guidance.
+  // G4VisManager* visManager = new G4VisExecutive("Quiet");
+  visManager->Initialize();
+
+  // Get the pointer to the User Interface manager
+  G4UImanager* UImanager = G4UImanager::GetUIpointer();
+
+  // Process macro or start UI session
+  //
+  if ( ! ui ) {
+    // barch mode
+    G4String command = "/control/execute ";
+    G4String fileName = argv[1];
+    UImanager->ApplyCommand(command+fileName);
+  }
+  else {  
+    // interactive mode
+    UImanager->ApplyCommand("/control/execute init_vis.mac");
+    if (ui->IsGUI()) {
+      UImanager->ApplyCommand("/control/execute gui.mac");
+    }
+    ui->SessionStart();
+    delete ui;
+  }
+  /*
   G4VisManager* visManager = nullptr;
 
   // get the pointer to the User Interface manager
@@ -108,5 +134,5 @@ int main(int argc,char** argv) {
   delete visManager;
   delete runManager;
 }
-
+*/
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
