@@ -103,7 +103,7 @@ int main(int argc,char** argv) {
     // interactive mode
     UImanager->ApplyCommand("/control/execute init_vis.mac");
     if (ui->IsGUI()) {
-      UImanager->ApplyCommand("/control/execute gui.mac");
+      UImanager->ApplyCommand("/control/execute vis.mac");
     }
     ui->SessionStart();
     delete ui;
