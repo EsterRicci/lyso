@@ -129,10 +129,10 @@ int main(int argc,char** argv) {
    G4String fileName = argv[1];
    UImanager->ApplyCommand(command+fileName);
   }
-
+*/
   //job termination
   delete visManager;
   delete runManager;
 }
-*/
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
